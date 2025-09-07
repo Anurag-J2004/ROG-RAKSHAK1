@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROG-RAKSHAK - Community Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Active nav link style */
+        .nav-link.active {
+            background-color: #eef2ff;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        .nav-link.active i {
+            color: #4f46e5;
+        }
+        /* Mobile bottom nav */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: 80px; /* Space for bottom nav */
+            }
+        }
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 90px;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.5s linear;
+        }
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation (for desktop) -->
+        <aside class="w-64 bg-white shadow-md hidden md:flex flex-col">
+            <div class="p-6 border-b">
+                <h1 class="text-2xl font-bold text-indigo-600">ROG-RAKSHAK</h1>
+                <p class="text-sm text-gray-500">Community Platform</p>
+            </div>
+            <nav id="desktop-nav" class="flex-1 p-4 space-y-2">
+                <a href="#" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100 active" data-tab="dashboard">
+                    <i class="fas fa-chart-pie w-6 text-center text-gray-400"></i><span class="ml-3">Dashboard</span>
+                </a>
+                <a href="#" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100" data-tab="report">
+                    <i class="fas fa-file-medical w-6 text-center text-gray-400"></i><span class="ml-3">Report Case</span>
+                </a>
+                <a href="#" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100" data-tab="alerts">
+                    <i class="fas fa-bell w-6 text-center text-gray-400"></i><span class="ml-3">Alerts</span>
+                </a>
+                <a href="#" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100" data-tab="education">
+                    <i class="fas fa-book-open w-6 text-center text-gray-400"></i><span class="ml-3">Education</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t">
+                <div class="bg-blue-50 p-4 rounded-lg text-center">
+                    <h3 class="font-bold text-blue-800">Health Score</h3>
+                    <p class="text-3xl font-bold text-blue-600">85<span class="text-lg">/100</span></p>
+                    <div class="w-full bg-blue-200 rounded-full h-2.5 mt-2">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 85%"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="p-4 md:p-8">
+                <!-- Dashboard Content -->
+                <div id="dashboard" class="tab-content">
+                    <h2 class="text-2xl font-bold mb-6">Community Dashboard</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Risk Level Card -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 font-semibold">Current Risk Level</h3>
+                            <p id="riskLevel" class="text-4xl font-bold text-green-500 mt-2">Low</p>
+                        </div>
+                         <!-- Water Quality Card -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 font-semibold">Water Quality</h3>
+                            <p id="waterQualityStatus" class="text-4xl font-bold text-blue-500 mt-2">Good</p>
+                        </div>
+                        <!-- Active Alerts Card -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 font-semibold">Active Alerts</h3>
+                            <p id="activeAlertsCount" class="text-4xl font-bold text-red-500 mt-2">0</p>
+                        </div>
+                    </div>
+                    <!-- Trends Chart -->
+                    <div class="mt-8 bg-white p-6 rounded-lg shadow-sm">
+                         <h3 class="font-semibold mb-4">7-Day Health Trends</h3>
+                         <canvas id="healthTrendsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Report Content -->
+                <div id="report" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-6">Report a Case or Water Sample</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                         <!-- Report Health Case -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-semibold mb-4 text-lg text-indigo-700">Report Health Case</h3>
+                            <form id="healthReportForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Symptoms</label>
+                                    <input type="text" id="symptoms" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Fever, Diarrhea" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Location / Village</label>
+                                    <input type="text" id="location" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Village Center" required>
+                                </div>
+                                 <div>
+                                    <label class="block text-sm font-medium text-gray-700">No. of People Affected</label>
+                                    <input type="number" id="peopleAffected" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" min="1" required>
+                                </div>
+                                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Submit Health Report</button>
+                            </form>
+                        </div>
+                        <!-- Report Water Quality -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                             <h3 class="font-semibold mb-4 text-lg text-teal-700">Submit Water Quality Data</h3>
+                            <form id="waterReportForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Water Source</label>
+                                    <select id="waterSource" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                                        <option>Community Well 1</option>
+                                        <option>River Point A</option>
+                                        <option>Hand Pump B</option>
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">pH Level</label>
+                                        <input type="number" step="0.1" id="phLevel" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Turbidity (NTU)</label>
+                                        <input type="number" id="turbidity" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">Submit Water Data</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts Content -->
+                <div id="alerts" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-6">Community Health Alerts</h2>
+                    <div id="alertsContainer" class="space-y-6">
+                        <div class="text-center p-8 bg-white rounded-lg shadow-sm">
+                            <i class="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
+                            <h3 class="font-semibold text-lg">All Clear!</h3>
+                            <p class="text-gray-500">There are no active health alerts in your community.</p>
+                        </div>
+                        <!-- Alert cards will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Education Content -->
+                <div id="education" class="tab-content hidden">
+                     <h2 class="text-2xl font-bold mb-6">Health Education</h2>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-purple-500">
+                            <h3 class="font-bold text-lg text-purple-800">Mental Wellness</h3>
+                            <p class="text-gray-600 mt-2">Stress management techniques for a calmer, more focused daily life.</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500">
+                            <h3 class="font-bold text-lg text-red-800">Heart Health</h3>
+                            <p class="text-gray-600 mt-2">Understanding blood pressure and the factors that affect your cardiovascular health.</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
+                            <h3 class="font-bold text-lg text-green-800">Safe Water Practices</h3>
+                            <p class="text-gray-600 mt-2">Always boil drinking water for at least 1 minute. Store water in clean, covered containers.</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
+                            <h3 class="font-bold text-lg text-blue-800">Hand Hygiene Tips</h3>
+                            <p class="text-gray-600 mt-2">Wash hands with soap for 20 seconds before eating and after using the toilet.</p>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav id="mobile-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-t-md flex justify-around p-2 border-t">
+        <a href="#" class="nav-link flex flex-col items-center text-center text-gray-600 p-2 active" data-tab="dashboard">
+            <i class="fas fa-chart-pie"></i><span class="text-xs mt-1">Dashboard</span>
+        </a>
+        <a href="#" class="nav-link flex flex-col items-center text-center text-gray-600 p-2" data-tab="report">
+            <i class="fas fa-file-medical"></i><span class="text-xs mt-1">Report</span>
+        </a>
+        <a href="#" class="nav-link flex flex-col items-center text-center text-gray-600 p-2" data-tab="alerts">
+            <i class="fas fa-bell"></i><span class="text-xs mt-1">Alerts</span>
+        </a>
+        <a href="#" class="nav-link flex flex-col items-center text-center text-gray-600 p-2" data-tab="education">
+            <i class="fas fa-book-open"></i><span class="text-xs mt-1">Education</span>
+        </a>
+    </nav>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- STATE MANAGEMENT ---
+        const state = {
+            healthReports: [2, 3, 1, 4, 2, 5, 3], // Mock data
+            waterQuality: { ph: 7.2, turbidity: 4 },
+            activeAlerts: [],
+        };
+
+        // --- UI ELEMENTS ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const healthReportForm = document.getElementById('healthReportForm');
+        const waterReportForm = document.getElementById('waterReportForm');
+        const riskLevelEl = document.getElementById('riskLevel');
+        const waterQualityStatusEl = document.getElementById('waterQualityStatus');
+        const activeAlertsCountEl = document.getElementById('activeAlertsCount');
+        const alertsContainer = document.getElementById('alertsContainer');
+        const toastEl = document.getElementById('toast');
+        
+        // --- CHART SETUP ---
+        let healthChart;
+        const createChart = () => {
+            const ctx = document.getElementById('healthTrendsChart').getContext('2d');
+            if (healthChart) healthChart.destroy();
+            healthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['6 days ago', '5', '4', '3', '2', 'Yesterday', 'Today'],
+                    datasets: [{
+                        label: 'Reported Cases',
+                        data: state.healthReports,
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderColor: '#4f46e5',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        };
+
+        // --- CORE LOGIC & RENDERING ---
+        const renderAlerts = () => {
+            alertsContainer.innerHTML = '';
+            if (state.activeAlerts.length === 0) {
+                 alertsContainer.innerHTML = `
+                    <div class="text-center p-8 bg-white rounded-lg shadow-sm">
+                        <i class="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
+                        <h3 class="font-semibold text-lg">All Clear!</h3>
+                        <p class="text-gray-500">There are no active health alerts in your community.</p>
+                    </div>`;
+                return;
+            }
+
+            state.activeAlerts.forEach(alert => {
+                const alertCard = document.createElement('div');
+                alertCard.className = 'bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500';
+                alertCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-xl font-bold text-red-800">${alert.disease} Outbreak Alert</h3>
+                            <p class="text-gray-500">Location: ${alert.location}</p>
+                            <p class="text-gray-500">People Affected: <span class="font-bold">${alert.affected}</span></p>
+                        </div>
+                        <div class="text-sm bg-red-100 text-red-700 font-semibold px-3 py-1 rounded-full">${alert.level} RISK</div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold">Symptoms:</h4>
+                        <p class="text-gray-600">${alert.symptoms}</p>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="font-semibold">Precautions:</h4>
+                        <p class="text-gray-600">${alert.precautions}</p>
+                    </div>
+                    <div class="mt-6 text-right">
+                        <button class="contact-doctor-btn bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            <i class="fas fa-phone-alt mr-2"></i>Contact Regional Doctor
+                        </button>
+                    </div>
+                `;
+                alertsContainer.appendChild(alertCard);
+            });
+        };
+
+        const updateDashboard = () => {
+            const recentCases = state.healthReports[state.healthReports.length - 1];
+            const { ph, turbidity } = state.waterQuality;
+
+            let waterIsGood = (ph >= 6.5 && ph <= 8.5 && turbidity < 5);
+            waterQualityStatusEl.textContent = waterIsGood ? 'Good' : 'Poor';
+            waterQualityStatusEl.className = text-4xl font-bold mt-2 ${waterIsGood ? 'text-blue-500' : 'text-orange-500'};
+            
+            let risk = 'Low';
+            let riskColor = 'text-green-500';
+
+            if (recentCases > 5 || !waterIsGood) {
+                risk = 'Medium';
+                riskColor = 'text-yellow-500';
+            }
+            if (recentCases > 8 && !waterIsGood) {
+                risk = 'High';
+                riskColor = 'text-red-500';
+                
+                // Trigger a new alert if one doesn't already exist for this condition
+                if(!state.activeAlerts.find(a => a.id === 1)){
+                     state.activeAlerts.push({
+                         id: 1,
+                         disease: "Potential Cholera",
+                         location: "Community-wide",
+                         affected: recentCases,
+                         level: "High",
+                         symptoms: "Severe watery diarrhea, vomiting, leg cramps. Rapid loss of body fluids leads to dehydration and shock.",
+                         precautions: "Drink only boiled or purified water. Wash hands thoroughly with soap. Cook food well and eat it hot. Avoid raw food."
+                     });
+                }
+            } else {
+                 // Clear alert if conditions improve
+                 state.activeAlerts = state.activeAlerts.filter(a => a.id !== 1);
+            }
+
+            riskLevelEl.textContent = risk;
+            riskLevelEl.className = text-4xl font-bold mt-2 ${riskColor};
+            activeAlertsCountEl.textContent = state.activeAlerts.length;
+
+            createChart();
+            renderAlerts();
+        };
+
+        // --- EVENT LISTENERS ---
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tab = link.dataset.tab;
+
+                navLinks.forEach(l => l.classList.remove('active'));
+                
+                // Add active class to all links with the same data-tab (for desktop and mobile)
+                document.querySelectorAll(.nav-link[data-tab="${tab}"]).forEach(activeLink => {
+                    activeLink.classList.add('active');
+                });
+
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== tab);
+                });
+            });
+        });
+
+        healthReportForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const peopleAffected = parseInt(e.target.peopleAffected.value, 10);
+            state.healthReports.shift();
+            state.healthReports.push(peopleAffected);
+            updateDashboard();
+            e.target.reset();
+            showToast('Health report submitted!');
+        });
+
+        waterReportForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            state.waterQuality.ph = parseFloat(e.target.phLevel.value);
+            state.waterQuality.turbidity = parseFloat(e.target.turbidity.value);
+            updateDashboard();
+            e.target.reset();
+            showToast('Water data submitted!');
+        });
+        
+        alertsContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('contact-doctor-btn') || e.target.closest('.contact-doctor-btn')) {
+                 showToast('Alert sent to the regional doctor!');
+            }
+        });
+
+        // --- UTILITY ---
+        const showToast = (message) => {
+            toastEl.textContent = message;
+            toastEl.classList.add('show');
+            setTimeout(() => toastEl.classList.remove('show'), 3000);
+        };
+
+        // --- INITIALIZATION ---
+        updateDashboard();
+    });
+    </script>
+</body>
+</html>

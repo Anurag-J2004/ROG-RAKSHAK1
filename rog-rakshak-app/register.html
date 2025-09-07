@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ROG-RAKSHAK – Register / Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <h1 class="text-2xl font-bold text-indigo-600 mb-4">ROG-RAKSHAK</h1>
+    <p class="text-gray-600 mb-6">Register or Login as an Official</p>
+
+    <!-- Register Form -->
+    <form id="registerForm" class="space-y-3 mb-6">
+      <h2 class="text-lg font-semibold text-indigo-500">Register</h2>
+      <input type="email" id="regEmail" placeholder="Email" class="w-full border rounded p-2" required>
+      <input type="password" id="regPassword" placeholder="Password" class="w-full border rounded p-2" required>
+      <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Register</button>
+    </form>
+
+    <!-- Login Form -->
+    <form id="loginForm" class="space-y-3">
+      <h2 class="text-lg font-semibold text-green-600">Login</h2>
+      <input type="email" id="logEmail" placeholder="Email" class="w-full border rounded p-2" required>
+      <input type="password" id="logPassword" placeholder="Password" class="w-full border rounded p-2" required>
+      <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Login</button>
+    </form>
+
+    <!-- Output -->
+    <p id="message" class="mt-4 text-center text-sm text-gray-700"></p>
+  </div>
+
+  <script>
+    // 🔹 Replace with your Firebase project config
+      const firebaseConfig = {
+      apiKey: "AIzaSyCyEK1SjgxF3BuOIYT7nTvY8RpuErrxS1o",
+      authDomain: "rog-rakshak.firebaseapp.com",
+      databaseURL: "https://rog-rakshak-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "rog-rakshak",
+      storageBucket: "rog-rakshak.firebasestorage.app",
+      messagingSenderId: "131081764163",
+      appId: "1:131081764163:web:1ad5b9008bf00ef024c3f6"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.getAuth(app);
+
+    const registerForm = document.getElementById('registerForm');
+    const loginForm = document.getElementById('loginForm');
+    const msg = document.getElementById('message');
+
+    // Register
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      try {
+        await firebase.createUserWithEmailAndPassword(auth, email, password);
+        msg.textContent = "✅ Registration successful. You can now log in.";
+        msg.className = "text-green-600 text-center";
+        registerForm.reset();
+      } catch (err) {
+        msg.textContent = "❌ " + err.message;
+        msg.className = "text-red-600 text-center";
+      }
+    });
+
+    // Login
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('logEmail').value;
+      const password = document.getElementById('logPassword').value;
+      try {
+        await firebase.signInWithEmailAndPassword(auth, email, password);
+        msg.textContent = "✅ Login successful. Redirecting...";
+        msg.className = "text-green-600 text-center";
+        setTimeout(() => { window.location.href = "rog-rakshak_official_firebase.html"; }, 1500);
+      } catch (err) {
+        msg.textContent = "❌ " + err.message;
+        msg.className = "text-red-600 text-center";
+      }
+    });
+  </script>
+</body>
+</html>
