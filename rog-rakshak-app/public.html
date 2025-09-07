@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROG-RAKSHAK (Public Alerts)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <header class="bg-white shadow-sm">
+        <div class="max-w-4xl mx-auto py-4 px-6">
+            <h1 class="text-3xl font-bold text-indigo-600">ROG-RAKSHAK</h1>
+            <p class="text-gray-500">Public Health Information System</p>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6">
+        <!-- Community Status Section -->
+        <section id="status-section" class="mb-8">
+             <h2 class="text-2xl font-bold text-gray-800 mb-4">Live Community Status</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                <!-- Weather Card -->
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h3 class="font-semibold text-gray-500 text-sm">WEATHER</h3>
+                    <div id="weatherStatus" class="flex items-center justify-center mt-2">
+                        <i class="fas fa-cloud-sun text-3xl text-yellow-500 mr-3"></i>
+                        <p class="text-xl font-bold text-gray-800">--</p>
+                    </div>
+                </div>
+                <!-- Water Quality Card -->
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h3 class="font-semibold text-gray-500 text-sm">WATER QUALITY</h3>
+                    <div id="waterQualityStatus" class="flex items-center justify-center mt-2">
+                        <i class="fas fa-tint text-3xl text-gray-400 mr-3"></i>
+                        <p class="text-xl font-bold text-gray-800">--</p>
+                    </div>
+                </div>
+                <!-- Community Health Card -->
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h3 class="font-semibold text-gray-500 text-sm">COMMUNITY HEALTH</h3>
+                    <div id="communityHealthStatus" class="flex items-center justify-center mt-2">
+                        <i class="fas fa-heartbeat text-3xl text-gray-400 mr-3"></i>
+                        <p class="text-xl font-bold text-gray-800">--</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerts Section -->
+        <section id="alerts-section">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Current Health Alerts</h2>
+            <div id="alertsContainer" class="space-y-6">
+                <div id="no-alerts-message" class="text-center p-8 bg-white rounded-lg shadow-sm">
+                    <i class="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
+                    <h3 class="font-semibold text-lg">All Clear!</h3>
+                    <p class="text-gray-500">There are no active health alerts in your community. Stay safe!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Education Section -->
+        <section id="education-section" class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Health Education</h2>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
+                    <h3 class="font-bold text-lg text-green-800">Safe Water Practices</h3>
+                    <p class="text-gray-600 mt-2">Always boil drinking water for at least 1 minute. Store water in clean, covered containers.</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
+                    <h3 class="font-bold text-lg text-blue-800">Hand Hygiene Tips</h3>
+                    <p class="text-gray-600 mt-2">Wash hands with soap for 20 seconds before eating and after using the toilet to prevent germ spread.</p>
+                </div>
+             </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-4 mt-8">
+        <p class="text-sm text-gray-400">Last updated: <span id="lastUpdated">N/A</span></p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alertsContainer = document.getElementById('alertsContainer');
+        const noAlertsMessage = document.getElementById('no-alerts-message');
+        const lastUpdatedEl = document.getElementById('lastUpdated');
+
+        const weatherStatusEl = document.querySelector('#weatherStatus p');
+        const waterQualityStatusEl = document.querySelector('#waterQualityStatus p');
+        const communityHealthStatusEl = document.querySelector('#communityHealthStatus p');
+        const waterQualityIcon = document.querySelector('#waterQualityStatus i');
+        const communityHealthIcon = document.querySelector('#communityHealthStatus i');
+
+        const renderPageData = (data) => {
+            // --- Update Status Cards ---
+            if (!data) {
+                weatherStatusEl.textContent = '--';
+                waterQualityStatusEl.textContent = 'N/A';
+                communityHealthStatusEl.textContent = 'N/A';
+                // Reset colors and icons
+                waterQualityIcon.className = 'fas fa-tint text-3xl text-gray-400 mr-3';
+                communityHealthIcon.className = 'fas fa-heartbeat text-3xl text-gray-400 mr-3';
+            } else {
+                // Weather
+                weatherStatusEl.textContent = data.weatherCondition || '--';
+
+                // Water Quality
+                const waterStatus = data.waterQualityStatus || 'N/A';
+                waterQualityStatusEl.textContent = waterStatus;
+                if (waterStatus === 'Good') {
+                    waterQualityIcon.className = 'fas fa-tint text-3xl text-blue-500 mr-3';
+                } else {
+                    waterQualityIcon.className = 'fas fa-tint text-3xl text-orange-500 mr-3';
+                }
+
+                // Community Health
+                const healthStatus = data.communityHealth || 'N/A';
+                communityHealthStatusEl.textContent = healthStatus;
+                if (healthStatus === 'Low') {
+                    communityHealthIcon.className = 'fas fa-heartbeat text-3xl text-green-500 mr-3';
+                } else if (healthStatus === 'Medium') {
+                    communityHealthIcon.className = 'fas fa-heartbeat text-3xl text-yellow-500 mr-3';
+                } else {
+                    communityHealthIcon.className = 'fas fa-heartbeat text-3xl text-red-500 mr-3';
+                }
+                
+                lastUpdatedEl.textContent = new Date(data.lastUpdated).toLocaleString();
+            }
+
+            // --- Update Alerts Section ---
+            alertsContainer.innerHTML = '';
+            if (!data || !data.alerts || data.alerts.length === 0) {
+                alertsContainer.appendChild(noAlertsMessage);
+            } else {
+                data.alerts.forEach(alert => {
+                    const alertCard = document.createElement('div');
+                    alertCard.className = 'bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500 animate-fade-in';
+                    alertCard.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-xl font-bold text-red-800">${alert.disease} Outbreak Alert</h3>
+                                <p class="text-gray-500">Location: ${alert.location}</p>
+                                <p class="text-gray-500">People Affected: <span class="font-bold">${alert.affected}</span></p>
+                            </div>
+                            <div class="text-sm bg-red-100 text-red-700 font-semibold px-3 py-1 rounded-full">${alert.level} RISK</div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t"><h4 class="font-semibold">Symptoms:</h4><p class="text-gray-600">${alert.symptoms}</p></div>
+                        <div class="mt-4"><h4 class="font-semibold">Precautions:</h4><p class="text-gray-600">${alert.precautions}</p></div>
+                    `;
+                    alertsContainer.appendChild(alertCard);
+                });
+            }
+        };
+
+        const loadDataFromAPI = () => {
+            try {
+                const rawData = localStorage.getItem('rogRakshakData');
+                const data = JSON.parse(rawData);
+                renderPageData(data);
+            } catch (error) {
+                console.error("Could not load or parse data.", error);
+                renderPageData(null);
+            }
+        };
+
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'rogRakshakData') {
+                loadDataFromAPI();
+            }
+        });
+
+        loadDataFromAPI();
+    });
+    </script>
+</body>
+</html>

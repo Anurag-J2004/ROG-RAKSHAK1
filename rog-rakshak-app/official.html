@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROG-RAKSHAK (Official Portal)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .nav-link.active { background-color: #eef2ff; color: #4f46e5; font-weight: 600; }
+        .nav-link.active i { color: #4f46e5; }
+        .toast {
+            visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #333; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; opacity: 0;
+            transition: visibility 0s, opacity 0.5s linear;
+        }
+        .toast.show { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white shadow-md flex-col hidden md:flex">
+            <div class="p-6 border-b">
+                <h1 class="text-2xl font-bold text-indigo-600">ROG-RAKSHAK</h1>
+                <p class="text-sm text-gray-500">Official Portal</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100 active" data-tab="dashboard">
+                    <i class="fas fa-chart-pie w-6 text-center text-gray-400"></i><span class="ml-3">Dashboard</span>
+                </a>
+                <a href="#" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100" data-tab="report">
+                    <i class="fas fa-file-medical w-6 text-center text-gray-400"></i><span class="ml-3">Report Data</span>
+                </a>
+                <a href="#" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100" data-tab="publish">
+                    <i class="fas fa-bullhorn w-6 text-center text-gray-400"></i><span class="ml-3">Publish Alert</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-8">
+            <!-- Dashboard Content -->
+            <div id="dashboard" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">Community Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm"><h3 class="text-gray-500 font-semibold">Current Risk Level</h3><p id="riskLevel" class="text-4xl font-bold text-green-500 mt-2">Low</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm"><h3 class="text-gray-500 font-semibold">Water Quality</h3><p id="waterQualityStatus" class="text-4xl font-bold text-blue-500 mt-2">Good</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm"><h3 class="text-gray-500 font-semibold">Active Alerts</h3><p id="activeAlertsCount" class="text-4xl font-bold text-red-500 mt-2">0</p></div>
+                </div>
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-sm">
+                     <h3 class="font-semibold mb-4">7-Day Health Trends</h3><canvas id="healthTrendsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Report Data Content -->
+            <div id="report" class="tab-content hidden">
+                <h2 class="text-2xl font-bold mb-6">Report a Case or Water Sample</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="font-semibold mb-4 text-lg text-indigo-700">Report Health Case</h3>
+                        <form id="healthReportForm" class="space-y-4">
+                            <input name="symptoms" type="text" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="Symptoms (e.g., Fever, Diarrhea)" required>
+                            <input name="location" type="text" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="Location / Village" required>
+                            <input name="peopleAffected" type="number" min="1" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="No. of People Affected" required>
+                            <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Submit Health Report</button>
+                        </form>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                         <h3 class="font-semibold mb-4 text-lg text-teal-700">Submit Water Quality Data</h3>
+                        <form id="waterReportForm" class="space-y-4">
+                            <input name="phLevel" type="number" step="0.1" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="pH Level" required>
+                            <input name="turbidity" type="number" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="Turbidity (NTU)" required>
+                            <button type="submit" class="w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700">Submit Water Data</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Publish Alert Content -->
+            <div id="publish" class="tab-content hidden">
+                <h2 class="text-2xl font-bold mb-6">Manage & Publish Public Alerts</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                     <h3 class="font-semibold mb-4 text-lg text-red-700">Create a New Public Alert</h3>
+                     <form id="alertForm" class="space-y-4">
+                        <input type="text" id="alertDisease" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="Disease Name (e.g., Cholera)" required>
+                        <input type="text" id="alertLocation" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="Affected Location" required>
+                        <input type="number" id="alertAffected" min="1" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="Number of People Affected" required>
+                        <textarea id="alertSymptoms" rows="3" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="Key Symptoms" required></textarea>
+                        <textarea id="alertPrecautions" rows="3" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" placeholder="Precautions to Take" required></textarea>
+                        <button type="submit" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700">
+                            <i class="fas fa-paper-plane mr-2"></i>Publish Alert to Public App
+                        </button>
+                     </form>
+                </div>
+                 <div class="mt-8">
+                    <h3 class="text-xl font-bold mb-4">Currently Published Alerts</h3>
+                    <div id="publishedAlertsContainer" class="space-y-4">
+                        <p class="text-gray-500">No alerts are currently published.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- STATE MANAGEMENT ---
+        const state = {
+            healthReports: [2, 3, 1, 4, 2, 5, 3],
+            waterQuality: { ph: 7.2, turbidity: 4 },
+            publishedAlerts: [], 
+        };
+
+        // --- UI ELEMENTS ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const alertForm = document.getElementById('alertForm');
+        const healthReportForm = document.getElementById('healthReportForm');
+        const waterReportForm = document.getElementById('waterReportForm');
+        const publishedAlertsContainer = document.getElementById('publishedAlertsContainer');
+        const toastEl = document.getElementById('toast');
+        const riskLevelEl = document.getElementById('riskLevel');
+        const waterQualityStatusEl = document.getElementById('waterQualityStatus');
+        const activeAlertsCountEl = document.getElementById('activeAlertsCount');
+        let healthChart;
+
+        // --- API SIMULATION ---
+        const publishDataToAPI = () => {
+            const { ph, turbidity } = state.waterQuality;
+            const waterIsGood = (ph >= 6.5 && ph <= 8.5 && turbidity < 5);
+            const waterQualityStatus = waterIsGood ? 'Good' : 'Poor';
+            const communityHealth = riskLevelEl.textContent;
+            const weatherCondition = "Partly Cloudy, 30°C";
+
+            const dataToPublish = {
+                alerts: state.publishedAlerts,
+                waterQualityStatus: waterQualityStatus,
+                weatherCondition: weatherCondition,
+                communityHealth: communityHealth,
+                lastUpdated: new Date().toISOString(),
+            };
+            localStorage.setItem('rogRakshakData', JSON.stringify(dataToPublish));
+            console.log('Published data:', dataToPublish);
+        };
+
+        // --- RENDERING ---
+        const renderPublishedAlerts = () => {
+            publishedAlertsContainer.innerHTML = '';
+            if (state.publishedAlerts.length === 0) {
+                publishedAlertsContainer.innerHTML = '<p class="text-gray-500">No alerts are currently published.</p>';
+            } else {
+                state.publishedAlerts.forEach((alert, index) => {
+                    const alertEl = document.createElement('div');
+                    alertEl.className = 'bg-white p-4 rounded-lg shadow-sm flex justify-between items-center';
+                    alertEl.innerHTML = `
+                        <div>
+                            <p class="font-bold">${alert.disease} - ${alert.location}</p>
+                            <p class="text-sm text-gray-600">Affected: ${alert.affected}</p>
+                        </div>
+                        <button data-index="${index}" class="remove-alert-btn text-red-500 hover:text-red-700 font-semibold">Remove</button>
+                    `;
+                    publishedAlertsContainer.appendChild(alertEl);
+                });
+            }
+             activeAlertsCountEl.textContent = state.publishedAlerts.length;
+        };
+        
+        const createChart = () => {
+             const ctx = document.getElementById('healthTrendsChart').getContext('2d');
+            if (healthChart) healthChart.destroy();
+            healthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['6 days ago', '5', '4', '3', '2', 'Yesterday', 'Today'],
+                    datasets: [{
+                        label: 'Reported Cases', data: state.healthReports, backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderColor: '#4f46e5', borderWidth: 3, tension: 0.4, fill: true,
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+            });
+        };
+
+        const updateDashboard = () => {
+            const recentCases = state.healthReports[state.healthReports.length - 1];
+            const { ph, turbidity } = state.waterQuality;
+
+            let waterIsGood = (ph >= 6.5 && ph <= 8.5 && turbidity < 5);
+            waterQualityStatusEl.textContent = waterIsGood ? 'Good' : 'Poor';
+            waterQualityStatusEl.className = `text-4xl font-bold mt-2 ${waterIsGood ? 'text-blue-500' : 'text-orange-500'}`;
+            
+            let risk = 'Low';
+            let riskColor = 'text-green-500';
+
+            if (recentCases > 5 || !waterIsGood) {
+                risk = 'Medium'; riskColor = 'text-yellow-500';
+            }
+            if (recentCases > 8 && !waterIsGood) {
+                risk = 'High'; riskColor = 'text-red-500';
+            }
+            riskLevelEl.textContent = risk;
+            riskLevelEl.className = `text-4xl font-bold mt-2 ${riskColor}`;
+            
+            createChart();
+            publishDataToAPI();
+        };
+
+        // --- EVENT LISTENERS ---
+        navLinks.forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                tabContents.forEach(c => c.classList.toggle('hidden', c.id !== link.dataset.tab));
+            });
+        });
+
+        healthReportForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const peopleAffected = parseInt(e.target.peopleAffected.value, 10);
+            state.healthReports.shift();
+            state.healthReports.push(peopleAffected);
+            updateDashboard();
+            e.target.reset();
+            showToast('Health report submitted!');
+        });
+
+        waterReportForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            state.waterQuality.ph = parseFloat(e.target.phLevel.value);
+            state.waterQuality.turbidity = parseFloat(e.target.turbidity.value);
+            updateDashboard();
+            e.target.reset();
+            showToast('Water data submitted!');
+        });
+
+        alertForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newAlert = {
+                id: Date.now(),
+                disease: e.target.alertDisease.value, location: e.target.alertLocation.value,
+                affected: e.target.alertAffected.value, level: "High",
+                symptoms: e.target.alertSymptoms.value, precautions: e.target.alertPrecautions.value,
+            };
+            state.publishedAlerts.push(newAlert);
+            publishDataToAPI();
+            renderPublishedAlerts();
+            alertForm.reset();
+            showToast('Alert published successfully!');
+        });
+        
+        publishedAlertsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-alert-btn')) {
+                const index = e.target.dataset.index;
+                state.publishedAlerts.splice(index, 1);
+                publishDataToAPI();
+                renderPublishedAlerts();
+                showToast('Alert removed.');
+            }
+        });
+
+        // --- UTILITY ---
+        const showToast = (message) => {
+            toastEl.textContent = message;
+            toastEl.classList.add('show');
+            setTimeout(() => toastEl.classList.remove('show'), 3000);
+        };
+        
+        // --- INITIALIZATION ---
+        localStorage.removeItem('rogRakshakData');
+        updateDashboard();
+        renderPublishedAlerts();
+    });
+    </script>
+</body>
+</html>
